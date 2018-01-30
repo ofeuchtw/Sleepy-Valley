@@ -68,6 +68,15 @@ public class Item {
 			}
 		}
 		
+		public type parse(String s) {
+			switch(s) {
+				case "key":
+					return key;
+				default:
+					return null;
+			}
+		}
+		
 		public boolean isCan() {
 			return this == can;
 		}
@@ -115,6 +124,39 @@ public class Item {
 		this.x = x;
 		this.y = y;
 		outside = true;
+	}
+	
+	public Item(String itemData) {
+		String typeString = "";
+		String pos = "";
+		int oldX, oldY;
+		oldX = oldY = 0;
+		
+		//reads name and position coordinates
+		if (!itemData.equals("null") && itemData.length() != 0) {
+			String data[] = itemData.split("\\.");
+			typeString = data[0];
+			oldX = Integer.parseInt(data[1]);
+			oldY = Integer.parseInt(data[2]);
+			pos = data[3];
+		}
+		
+		type itemType = type.parseType(typeString);
+		
+		if(itemType == null) {
+			return;
+		}
+		
+		altered = typeString.equals("canFull");
+		outside = !pos.equals("+");
+		if(typeString.equals("key")) {
+			submerged = (oldY > 1310);
+		}
+		
+		this.type = itemType;
+		this.x = oldX;
+		this.y = oldY;
+		
 	}
 	
 	public void change() {

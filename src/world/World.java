@@ -51,6 +51,7 @@ public class World extends JPanel implements ActionListener {
 			"pixel/healthicon1.png", "pixel/healthicon2.png",
 			"pixel/healthicon3.png", "pixel/healthicon2.png",
 			"pixel/healthicon1.png" };
+
 	private final String[] hungericon = { "pixel/hungericon0.png",
 			"pixel/hungericon1.png", "pixel/hungericon2.png",
 			"pixel/hungericon3.png", "pixel/hungericon4.png",
@@ -120,55 +121,38 @@ public class World extends JPanel implements ActionListener {
 		timer.start();
 		repaint();
 	}
-
-	//parses data, creates appropriate Items and adds them to the destination
-	public void add(String[] data, Item[] destination) {
+	
+	//parses an array of save data, adding the appropriate items to their destination
+	public void parseItemSaveData(String[] data, Item[] destination) {
 		for (int i = 0; i < data.length; i++) {
-			String name = "";
-			if (!data[i].equals("null")) {
-				int first = data[i].indexOf(".");
-				name = data[i].substring(0, first);
-			}
-			type pl = Item.type.parseType(name);
-			if (pl != null) {
-				destination[i] = new Item(pl, 0, 0);
-				if (destination[i].getType() == type.key) {
-					destination[i].unsubmerge();
-				}
-			} else {
+			if(data[i].equals("null")) {
 				destination[i] = null;
-			}
-			if (name.equals("canFull")) {
-				destination[i].change();
+			} else {
+				Item item = new Item(data[i]);
+				destination[i] = item;
 			}
 		}
 	}
-
-	//parses data, creates appropriate Animals and adds them to the destination
-	public void add(String[] data, ArrayList<Creature> destination) {
+	
+	//parses an array of save data, adding the appropriate items to their destination
+	public void parseItemSaveData(String[] data, ArrayList<Item> destination) {
 		for (int i = 0; i < data.length; i++) {
-			String name = "";
-			int oldX, oldY, shift, direction;
-			oldX = oldY = shift = direction = 0;
-			if (!data[i].equals("null") && data[i].length() != 0) {
-				int first = data[i].indexOf(".");
-				int second = data[i].indexOf(".", first + 1);
-				int third = data[i].indexOf(".", second + 1);
-				int fourth = data[i].indexOf(".", third + 1);
-				name = data[i].substring(0, first);
-				oldX = Integer.parseInt(data[i].substring(first + 1, second));
-				oldY = Integer.parseInt(data[i].substring(second + 1, third));
-				shift = Integer.parseInt(data[i].substring(third + 1, fourth));
-				direction = Integer.parseInt(data[i].substring(fourth + 1));
-
+			if(!data[i].equals("null")) {
+				Item item = new Item(data[i]);
+				destination.add(item);
 			}
-			species sp = Creature.species.parseSpecies(name);
-			Creature an = new Creature(oldX, oldY, sp);
-			an.shift(shift);
-			an.direct(direction);
+		}
+	}
+	
+	//parses an array of save data, adding the appropriate Animals to their destination
+	public void parseAnimalSaveData(String[] data, ArrayList<Creature> destination) {
+		for (int i = 0; i < data.length; i++) {
+			Creature an = new Creature(data[i]);
 			destination.add(an);
 		}
 	}
+	
+	
 
 	//reads game data from save file and starts game
 	public void resume() {
@@ -184,102 +168,43 @@ public class World extends JPanel implements ActionListener {
 			start();
 			return;
 		}
+		
 		x = Integer.parseInt(in.nextLine());
 		y = Integer.parseInt(in.nextLine());
 		time = Integer.parseInt(in.nextLine());
 		hunger = Integer.parseInt(in.nextLine());
 		health = Integer.parseInt(in.nextLine());
 
-		String[] inv = in.nextLine().split(",");
-		add(inv, inventory);
+		String[] inventorySaveData = in.nextLine().split(",");
+		parseItemSaveData(inventorySaveData, inventory);
 
-		String[] dr = in.nextLine().split(",");
-		add(dr, drawer);
+		String[] drawerSaveData = in.nextLine().split(",");
+		parseItemSaveData(drawerSaveData, drawer);
 
-		String ite = in.nextLine();
-		if (ite.equals("null")) {
-			items = new ArrayList<Item>();
-		} else {
-			String[] it = ite.split(",");
-			for (int i = 0; i < it.length; i++) {
-				String name = "";
-				String pos = "";
-				int oldX, oldY;
-				oldX = oldY = 0;
-				if (!it[i].equals("null") && it[i].length() != 0) {
-					int first = it[i].indexOf(".");
-					int second = it[i].indexOf(".", first + 1);
-					int third = it[i].indexOf(".", second + 1);
-					name = it[i].substring(0, first);
-					oldX = Integer.parseInt(it[i].substring(first + 1, second));
-					oldY = Integer.parseInt(it[i].substring(second + 1, third));
-					pos = it[i].substring(third + 1);
-
-				}
-				type pl = Item.type.parseType(name);
-				if (!(pl == null)) {
-					items.add(new Item(pl, oldX, oldY));
-					if (items.get(items.size() - 1).getType() == type.key) {
-						if (oldY <= 1310) {
-							items.get(items.size() - 1).unsubmerge();
-						}
-					}
-				} else {
-					items.add(null);
-				}
-				if (name.equals("canFull")) {
-					items.get(i).change();
-				}
-				if (pos.equals("+")) {
-					items.get(i).putInside();
-				}
+		String itemSaveDataString = in.nextLine();
+		if (!itemSaveDataString.equals("null")) {
+			String[] itemSaveData = itemSaveDataString.split(",");
+			parseItemSaveData(itemSaveData, items);
+		}
+		
+		String plantSaveDataString = in.nextLine();
+		if (!plantSaveDataString.equals("null")) {
+			String[] plantSaveData = plantSaveDataString.split(",");
+			for (int i = 0; i < plantSaveData.length; i++) {
+				plants.add(new Plant(plantSaveData[i]));
 			}
 		}
 
-		String[] gar = in.nextLine().split(",");
-		for (int i = 0; i < gar.length; i++) {
-			String name = "";
-			int oldX, oldY;
-			oldX = oldY = 0;
-			String isWat = "";
-			String isGro = "";
-			if (!gar[i].equals("null")) {
-				int first = gar[i].indexOf(".");
-				int second = gar[i].indexOf(".", first + 1);
-				int third = gar[i].indexOf(".", second + 1);
-				name = gar[i].substring(0, first);
-				oldX = Integer.parseInt(gar[i].substring(first + 1, second));
-				oldY = Integer.parseInt(gar[i].substring(second + 1, third));
-				isWat = gar[i].substring(third + 1, third + 2);
-				isGro = gar[i].substring(third + 2);
-			}
-			type pl = Item.type.parseType(name);
-			if (!(pl == null)) {
-				plants.add(new Plant(oldX, oldY));
-				plants.get(plants.size() - 1).setPlant(pl);
-			}
-			if (isWat.equals("+")) {
-				plants.get(plants.size() - 1).water();
-			}
-			if (isGro.equals("+")) {
-				plants.get(plants.size() - 1).grow();
-			}
+		String animalSaveDataString = in.nextLine();
+		if (!animalSaveDataString.equals("null")) {
+			String[] animalSaveData = animalSaveDataString.split(",");
+			parseAnimalSaveData(animalSaveData, animals);
 		}
 
-		String anima = in.nextLine();
-		if (anima.equals("null")) {
-			animals = new ArrayList<Creature>();
-		} else {
-			String[] ani = anima.split(",");
-			add(ani, animals);
-		}
-
-		String ghos = in.nextLine();
-		if (ghos.equals("null")) {
-			ghosts = new ArrayList<Creature>();
-		} else {
-			String[] gho = ghos.split(",");
-			add(gho, ghosts);
+		String ghostSaveDataString = in.nextLine();
+		if (!ghostSaveDataString.equals("null")) {
+			String[] ghostSaveData = ghostSaveDataString.split(",");
+			parseAnimalSaveData(ghostSaveData, ghosts);
 		}
 
 		outside = in.nextBoolean();
@@ -291,25 +216,11 @@ public class World extends JPanel implements ActionListener {
 		version = in.nextInt();
 		v = in.nextInt();
 		if (hold) {
+			
 			in.nextLine();
 			String handItem = in.nextLine();
-			int first = handItem.indexOf(".");
-			int second = handItem.indexOf(".", first + 1);
-			String name = handItem.substring(0, first);
-			int oldX = Integer.parseInt(handItem.substring(first + 1, second));
-			int oldY = Integer.parseInt(handItem.substring(second + 1));
-			type pl = Item.type.parseType(name);
-			if (!pl.equals(null)) {
-				hand = new Item(pl, oldX, oldY);
-				if (hand.getType() == type.key) {
-					hand.unsubmerge();
-				}
-			} else {
-				hand = null;
-			}
-			if (name.equals("canFull")) {
-				hand.change();
-			}
+			
+			hand = new Item(handItem);
 		}
 		int k = 1;
 		for (int i = 0; i < 4; i++) {
@@ -625,7 +536,7 @@ public class World extends JPanel implements ActionListener {
 		}
 	}
 
-	//returns letter's vertical offset -- for title screen
+	//returns letter's vertical offset -- for title screen animation
 	public int getShift(int n) {
 		return Math.max(DIMENSION, Math.min((3 * DIMENSION), n));
 	}
@@ -1415,6 +1326,7 @@ public class World extends JPanel implements ActionListener {
 		}
 	}
 
+	//draws title screen
 	public void drawTitle(Graphics g) {
 		g.setColor(Color.black);
 		g.fillRect(0, 0, 800, 740);
@@ -1538,11 +1450,9 @@ public class World extends JPanel implements ActionListener {
 			}
 
 			if (time == 1200) {
-				ghosts.add(new Creature(species.ghost));
-				ghosts.add(new Creature(species.ghost));
-				ghosts.add(new Creature(species.ghost));
-				ghosts.add(new Creature(species.ghost));
-				ghosts.add(new Creature(species.ghost));
+				for(int i = 0; i < 5; i++) {
+					ghosts.add(new Creature(species.ghost));
+				}
 			} else if (time == 3600) {
 				ghosts.clear();
 			}

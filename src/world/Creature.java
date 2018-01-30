@@ -1,5 +1,7 @@
 package world;
 
+import world.Item.type;
+
 
 public class Creature {
 
@@ -71,6 +73,31 @@ public class Creature {
 		this.type = type;
 		direction = 1;
 		count = 0;
+	}
+	
+	public Creature(String creatureData) {
+		String speciesString = "";
+		
+		//parses coordinates, shift, and direction from string
+		if (!creatureData.equals("null") && creatureData.length() != 0) {
+			String data[] = creatureData.split("\\.");
+			
+			speciesString = data[0];
+			
+			species creatureType = Creature.species.parseSpecies(speciesString);
+			
+			if(creatureType == null) {
+				return;
+			}
+			
+			x = Integer.parseInt(data[1]);
+			y = Integer.parseInt(data[2]);
+			vertShift = Integer.parseInt(data[3]);
+			direction = Integer.parseInt(data[4]);
+			type = creatureType;
+			count = 0;
+		}
+		
 	}
 	
 	public void move() {

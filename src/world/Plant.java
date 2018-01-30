@@ -39,6 +39,36 @@ public class Plant {
 		}
 	}
 	
+	public Plant(String plantData) {
+		String typeString = "";
+		int oldX, oldY;
+		oldX = oldY = 0;
+		String isWatered = "";
+		String isGrown = "";
+		
+		if (!plantData.equals("null")) {
+			String data[] = plantData.split("\\.");
+			typeString = data[0];
+			oldX = Integer.parseInt(data[1]);
+			oldY = Integer.parseInt(data[2]);
+			isWatered = data[3].substring(0,1);
+			isGrown = data[3].substring(1);
+		}
+		
+		type plantType = Item.type.parseType(typeString);
+		
+		if(plantType == null) {
+			return;
+		}
+		
+		plant = plantType;
+		watered = isWatered.equals("+");
+		grown = isGrown.equals("+");
+		x = oldX;
+		y = oldY;
+		time = 0;
+	}
+	
 	public String getAddress() {
 		if(grown) {
 			switch(plant) {
